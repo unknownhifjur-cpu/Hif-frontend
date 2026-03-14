@@ -1,9 +1,13 @@
 /**
  * API utility — connects frontend to backend
  * Base URL is configurable via VITE_API_URL environment variable.
+ * In production, VITE_API_URL should be set to your backend root (e.g., https://hif-ai-server.onrender.com)
+ * and this code automatically appends '/api' to match your backend routes.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const BASE_URL = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`   // adds /api for production
+  : '/api';                                 // local development uses proxy
 
 /**
  * Send a question and get an AI answer
