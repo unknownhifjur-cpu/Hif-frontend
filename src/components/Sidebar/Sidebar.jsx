@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Trash2, Plus, X, Search,
-  MessageSquare, HelpCircle, Moon, Sun,
+  MessageSquare, HelpCircle, Moon, Sun, CalendarCheck, Timer, Gamepad2, PenLine, StickyNote,
 } from 'lucide-react';
 import { groupChatsByDate, getSubject, formatRelativeTime } from '../../utils/subjects';
 
@@ -26,16 +26,9 @@ function NavIcon({ icon: Icon, label, active, onClick }) {
 
 /* ─── Sidebar ─────────────────────────────────────────────────────── */
 export default function Sidebar({
-  chats,
-  activeChatId,
-  onSelectChat,
-  onNewChat,
-  onDeleteChat,
-  isOpen,
-  onClose,
-  onHelpOpen,
-  isDark,
-  onThemeToggle,
+  chats, activeChatId, onSelectChat, onNewChat, onDeleteChat,
+  isOpen, onClose, onHelpOpen, onPlannerOpen, onPomodoroOpen, onGameHubOpen, onWhiteboardOpen, onNotesOpen,
+  isDark, onThemeToggle,
 }) {
   const [search,     setSearch]     = useState('');
   const [deletingId, setDeletingId] = useState(null);
@@ -87,7 +80,12 @@ export default function Sidebar({
         </div>
 
         {/* Nav icons */}
-        <NavIcon icon={MessageSquare} label="Chats" active onClick={() => {}} />
+        <NavIcon icon={MessageSquare} label="Chats"          active onClick={() => {}} />
+        <NavIcon icon={StickyNote}    label="Quick Notes"    onClick={onNotesOpen} />
+        <NavIcon icon={CalendarCheck} label="Study Planner"  onClick={onPlannerOpen} />
+        <NavIcon icon={Timer}         label="Pomodoro Timer" onClick={onPomodoroOpen} />
+        <NavIcon icon={Gamepad2}      label="Game Hub"       onClick={onGameHubOpen} />
+        <NavIcon icon={PenLine}       label="Whiteboard"     onClick={onWhiteboardOpen} />
 
         <div className="flex-1" />
 

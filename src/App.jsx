@@ -7,6 +7,11 @@ import ChatWindow from './components/ChatWindow/ChatWindow';
 import InputBar from './components/InputBar/InputBar';
 import WelcomeScreen from './components/WelcomeScreen/WelcomeScreen';
 import HelpPage from './components/HelpPage/HelpPage';
+import StudyPlanner from './components/StudyPlanner/StudyPlanner';
+import PomodoroTimer from './components/PomodoroTimer/PomodoroTimer';
+import GameHub from './components/GameHub/GameHub';
+import Whiteboard from './components/Whiteboard/Whiteboard';
+import QuickNotes from './components/QuickNotes/QuickNotes';
 import { askQuestion, getChatHistory, getChatById, deleteChat } from './utils/api';
 
 function getSessionId() {
@@ -26,6 +31,11 @@ export default function App() {
   const [subject,          setSubject]          = useState('General');
   const [sidebarOpen,      setSidebarOpen]      = useState(false);
   const [helpOpen,         setHelpOpen]         = useState(false);
+  const [plannerOpen,      setPlannerOpen]      = useState(false);
+  const [pomodoroOpen,     setPomodoroOpen]     = useState(false);
+  const [gameHubOpen,      setGameHubOpen]      = useState(false);
+  const [whiteboardOpen,   setWhiteboardOpen]   = useState(false);
+  const [notesOpen,        setNotesOpen]        = useState(false);
   const [isDark,           setIsDark]           = useState(true);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
 
@@ -142,7 +152,12 @@ export default function App() {
         onDeleteChat={handleDeleteChat}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        onHelpOpen={() => setHelpOpen(true)}
+        onHelpOpen={       () => { setHelpOpen(true);       setPlannerOpen(false); setPomodoroOpen(false); setGameHubOpen(false); setWhiteboardOpen(false); setNotesOpen(false); }}
+        onPlannerOpen={    () => { setPlannerOpen(true);    setHelpOpen(false);    setPomodoroOpen(false); setGameHubOpen(false); setWhiteboardOpen(false); setNotesOpen(false); }}
+        onPomodoroOpen={   () => { setPomodoroOpen(true);   setHelpOpen(false);    setPlannerOpen(false);  setGameHubOpen(false); setWhiteboardOpen(false); setNotesOpen(false); }}
+        onGameHubOpen={    () => { setGameHubOpen(true);    setHelpOpen(false);    setPlannerOpen(false);  setPomodoroOpen(false); setWhiteboardOpen(false); setNotesOpen(false); }}
+        onWhiteboardOpen={ () => { setWhiteboardOpen(true); setHelpOpen(false);    setPlannerOpen(false);  setPomodoroOpen(false); setGameHubOpen(false);   setNotesOpen(false); }}
+        onNotesOpen={      () => { setNotesOpen(true);      setHelpOpen(false);    setPlannerOpen(false);  setPomodoroOpen(false); setGameHubOpen(false);   setWhiteboardOpen(false); }}
         isDark={isDark}
         onThemeToggle={() => setIsDark(d => !d)}
       />
@@ -172,15 +187,33 @@ export default function App() {
           <div className="flex-1 min-w-0">
             {helpOpen ? (
               <div>
-                <h1
-                  className="text-sm font-semibold"
-                  style={{ fontFamily: 'var(--font-head)', color: 'var(--text-0)' }}
-                >
-                  Help Center
-                </h1>
-                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
-                  Hif AI · Documentation
-                </p>
+                <h1 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-head)', color: 'var(--text-0)' }}>Help Center</h1>
+                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Hif AI · Documentation</p>
+              </div>
+            ) : plannerOpen ? (
+              <div>
+                <h1 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-head)', color: 'var(--text-0)' }}>Study Planner</h1>
+                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Hif AI · Daily Goals & Streaks</p>
+              </div>
+            ) : pomodoroOpen ? (
+              <div>
+                <h1 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-head)', color: 'var(--text-0)' }}>Pomodoro Timer</h1>
+                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Hif AI · Focus Sessions</p>
+              </div>
+            ) : gameHubOpen ? (
+              <div>
+                <h1 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-head)', color: 'var(--text-0)' }}>Game Hub</h1>
+                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Hif AI · Learn While You Play</p>
+              </div>
+            ) : whiteboardOpen ? (
+              <div>
+                <h1 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-head)', color: 'var(--text-0)' }}>Whiteboard</h1>
+                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Hif AI · Sketch & Diagram</p>
+              </div>
+            ) : notesOpen ? (
+              <div>
+                <h1 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-head)', color: 'var(--text-0)' }}>Quick Notes</h1>
+                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>Hif AI · Saved Locally</p>
               </div>
             ) : hasChat ? (
               <div>
@@ -191,7 +224,7 @@ export default function App() {
                   {activeChat?.title || 'New Chat'}
                 </h1>
                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
-                  Hif AI · Knowledge Explorer
+                  Hif AI · Student Tutor
                 </p>
               </div>
             ) : (
@@ -200,7 +233,7 @@ export default function App() {
                   className="text-sm font-bold"
                   style={{ fontFamily: 'var(--font-head)', color: 'var(--text-0)' }}
                 >
-                  AI Knowledge Engine
+                  Helpful | Innovative | Friendly AI
                 </h1>
               </div>
             )}
@@ -244,6 +277,16 @@ export default function App() {
         <AnimatePresence mode="wait">
           {helpOpen ? (
             <HelpPage key="help" onClose={() => setHelpOpen(false)} />
+          ) : plannerOpen ? (
+            <StudyPlanner key="planner" onClose={() => setPlannerOpen(false)} />
+          ) : pomodoroOpen ? (
+            <PomodoroTimer key="pomodoro" onClose={() => setPomodoroOpen(false)} />
+          ) : gameHubOpen ? (
+            <GameHub key="gamehub" onClose={() => setGameHubOpen(false)} />
+          ) : whiteboardOpen ? (
+            <Whiteboard key="whiteboard" onClose={() => setWhiteboardOpen(false)} />
+          ) : notesOpen ? (
+            <QuickNotes key="notes" onClose={() => setNotesOpen(false)} />
           ) : (
             <motion.div
               key="chat"
