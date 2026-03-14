@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Trash2, Plus, X, Search,
-  MessageSquare, Settings, HelpCircle,
+  MessageSquare, HelpCircle, Moon, Sun,
 } from 'lucide-react';
 import { groupChatsByDate, getSubject, formatRelativeTime } from '../../utils/subjects';
 
@@ -33,6 +33,9 @@ export default function Sidebar({
   onDeleteChat,
   isOpen,
   onClose,
+  onHelpOpen,
+  isDark,
+  onThemeToggle,
 }) {
   const [search,     setSearch]     = useState('');
   const [deletingId, setDeletingId] = useState(null);
@@ -88,8 +91,40 @@ export default function Sidebar({
 
         <div className="flex-1" />
 
-        <NavIcon icon={Settings}   label="Settings" onClick={() => {}} />
-        <NavIcon icon={HelpCircle} label="Help"     onClick={() => {}} />
+        {/* Theme toggle */}
+        <motion.button
+          onClick={onThemeToggle}
+          whileTap={{ scale: 0.88 }}
+          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          className="icon-btn"
+          style={{ position: 'relative', overflow: 'hidden' }}
+        >
+          <AnimatePresence mode="wait">
+            {isDark ? (
+              <motion.div
+                key="moon"
+                initial={{ opacity: 0, rotate: -30, scale: 0.7 }}
+                animate={{ opacity: 1, rotate: 0,   scale: 1   }}
+                exit={{    opacity: 0, rotate:  30, scale: 0.7 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Moon size={16} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="sun"
+                initial={{ opacity: 0, rotate: 30,  scale: 0.7 }}
+                animate={{ opacity: 1, rotate: 0,   scale: 1   }}
+                exit={{    opacity: 0, rotate: -30, scale: 0.7 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Sun size={16} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.button>
+
+        <NavIcon icon={HelpCircle} label="Help" onClick={onHelpOpen} />
       </div>
 
       {/* ── Column 2: Chat List ─────────────────────── */}
@@ -262,17 +297,9 @@ export default function Sidebar({
           className="px-4 py-3 text-center"
           style={{ borderTop: '1px solid var(--border-0)' }}
         >
-          <button
-            onClick={() => { /* handle clear */ }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{
-              background: 'rgba(248,113,113,0.08)',
-              color: 'var(--red)',
-              border: '1px solid rgba(248,113,113,0.2)',
-            }}
-          >
-            <Trash2 size={11} /> Clear history
-          </button>
+          <p className="text-[10px]" style={{ color: 'var(--text-4)' }}>
+            ⏳ Chats auto-delete after 24h
+          </p>
         </div>
       </div>
     </motion.aside>

@@ -4,7 +4,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Design Tokens ────────────────────────────────────────────────────── */
+/* ─── Design Tokens — Dark (default) ──────────────────────────────────── */
 :root {
   --bg-0:      #06080f;
   --bg-1:      #0a0d1a;
@@ -48,6 +48,48 @@
   --shadow-md:  0 4px 20px rgba(0,0,0,0.5);
   --shadow-lg:  0 8px 40px rgba(0,0,0,0.6);
   --shadow-accent: 0 4px 24px rgba(77,124,255,0.25);
+}
+
+/* ─── Design Tokens — Light ───────────────────────────────────────────── */
+body.light {
+  --bg-0:      #eceef5;
+  --bg-1:      #f5f6fb;
+  --bg-2:      #eceef5;
+  --bg-3:      #ffffff;
+  --bg-4:      #e4e7f2;
+  --bg-5:      #d8dcee;
+
+  --border-0:  rgba(0,0,0,0.05);
+  --border-1:  rgba(0,0,0,0.08);
+  --border-2:  rgba(0,0,0,0.13);
+  --border-accent: rgba(77,124,255,0.3);
+
+  --accent:       #3a6ae8;
+  --accent-light: #4d7cff;
+  --accent-dim:   rgba(77,124,255,0.1);
+  --cyan:         #0097a7;
+  --cyan-dim:     rgba(0,151,167,0.1);
+  --purple:       #7c3aed;
+  --green:        #16a34a;
+  --orange:       #c2410c;
+  --red:          #dc2626;
+  --yellow:       #d97706;
+
+  --text-0:  #0d1120;
+  --text-1:  #1e2740;
+  --text-2:  #4a5475;
+  --text-3:  #8892b0;
+  --text-4:  #b0b8d0;
+
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.07);
+  --shadow-md:  0 4px 20px rgba(0,0,0,0.1);
+  --shadow-lg:  0 8px 40px rgba(0,0,0,0.14);
+  --shadow-accent: 0 4px 24px rgba(77,124,255,0.18);
+}
+
+/* Smooth theme transition on every property */
+body, body * {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease, box-shadow 0.25s ease;
 }
 
 /* ─── Reset & Base ─────────────────────────────────────────────────────── */

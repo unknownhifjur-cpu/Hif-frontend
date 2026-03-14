@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Menu } from 'lucide-react';
 import Sidebar from './components/Sidebar/Sidebar';
 import ChatWindow from './components/ChatWindow/ChatWindow';
 import InputBar from './components/InputBar/InputBar';
 import WelcomeScreen from './components/WelcomeScreen/WelcomeScreen';
+import HelpPage from './components/HelpPage/HelpPage';
 import { askQuestion, getChatHistory, getChatById, deleteChat } from './utils/api';
 
 function getSessionId() {
@@ -24,7 +25,14 @@ export default function App() {
   const [error,            setError]            = useState(null);
   const [subject,          setSubject]          = useState('General');
   const [sidebarOpen,      setSidebarOpen]      = useState(false);
+  const [helpOpen,         setHelpOpen]         = useState(false);
+  const [isDark,           setIsDark]           = useState(true);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
+
+  // Apply light/dark class to <body>
+  useEffect(() => {
+    document.body.classList.toggle('light', !isDark);
+  }, [isDark]);
   const [searchQuery,      setSearchQuery]      = useState('');
   const [searchFocus,      setSearchFocus]      = useState(false);
 
@@ -134,6 +142,9 @@ export default function App() {
         onDeleteChat={handleDeleteChat}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onHelpOpen={() => setHelpOpen(true)}
+        isDark={isDark}
+        onThemeToggle={() => setIsDark(d => !d)}
       />
 
       {/* Main */}
@@ -159,7 +170,19 @@ export default function App() {
 
           {/* Title */}
           <div className="flex-1 min-w-0">
-            {hasChat ? (
+            {helpOpen ? (
+              <div>
+                <h1
+                  className="text-sm font-semibold"
+                  style={{ fontFamily: 'var(--font-head)', color: 'var(--text-0)' }}
+                >
+                  Help Center
+                </h1>
+                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+                  Hif AI · Documentation
+                </p>
+              </div>
+            ) : hasChat ? (
               <div>
                 <h1
                   className="text-sm font-semibold truncate"
@@ -168,7 +191,7 @@ export default function App() {
                   {activeChat?.title || 'New Chat'}
                 </h1>
                 <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
-                  Hif AI · Student Tutor
+                  Hif AI · Knowledge Explorer
                 </p>
               </div>
             ) : (
@@ -177,7 +200,7 @@ export default function App() {
                   className="text-sm font-bold"
                   style={{ fontFamily: 'var(--font-head)', color: 'var(--text-0)' }}
                 >
-                  AI Chat Helper
+                  AI Knowledge Engine
                 </h1>
               </div>
             )}
@@ -218,37 +241,50 @@ export default function App() {
         </header>
 
         {/* ── Content area ── */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          {hasChat ? (
-            <>
-              <ChatWindow
-                chat={activeChat}
-                isLoading={isLoading}
-                error={error}
-                onRegenerate={handleRegenerate}
-              />
-              <InputBar
-                onSend={handleSend}
-                disabled={isLoading}
-                currentSubject={subject}
-                onSubjectChange={setSubject}
-              />
-            </>
+        <AnimatePresence mode="wait">
+          {helpOpen ? (
+            <HelpPage key="help" onClose={() => setHelpOpen(false)} />
           ) : (
-            <>
-              <WelcomeScreen
-                onStartChat={handleWelcomeStart}
-                onSubjectSelect={setSubject}
-              />
-              <InputBar
-                onSend={handleSend}
-                disabled={isLoading}
-                currentSubject={subject}
-                onSubjectChange={setSubject}
-              />
-            </>
+            <motion.div
+              key="chat"
+              className="flex-1 flex flex-col min-h-0 overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {hasChat ? (
+                <>
+                  <ChatWindow
+                    chat={activeChat}
+                    isLoading={isLoading}
+                    error={error}
+                    onRegenerate={handleRegenerate}
+                  />
+                  <InputBar
+                    onSend={handleSend}
+                    disabled={isLoading}
+                    currentSubject={subject}
+                    onSubjectChange={setSubject}
+                  />
+                </>
+              ) : (
+                <>
+                  <WelcomeScreen
+                    onStartChat={handleWelcomeStart}
+                    onSubjectSelect={setSubject}
+                  />
+                  <InputBar
+                    onSend={handleSend}
+                    disabled={isLoading}
+                    currentSubject={subject}
+                    onSubjectChange={setSubject}
+                  />
+                </>
+              )}
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
     </div>
   );

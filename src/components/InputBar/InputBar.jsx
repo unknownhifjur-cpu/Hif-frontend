@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Loader2, Paperclip } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 import { SUBJECTS } from '../../utils/subjects';
 
 export default function InputBar({ onSend, disabled, currentSubject, onSubjectChange }) {
@@ -88,16 +88,6 @@ export default function InputBar({ onSend, disabled, currentSubject, onSubjectCh
           e.currentTarget.style.boxShadow = 'none';
         }}
       >
-        {/* Attachment */}
-        <button
-          className="flex-shrink-0 icon-btn ml-2 mb-2"
-          style={{ width: 32, height: 32 }}
-          disabled={disabled}
-          title="Attach file"
-        >
-          <Paperclip size={15} />
-        </button>
-
         {/* Textarea */}
         <textarea
           ref={textareaRef}
@@ -107,7 +97,7 @@ export default function InputBar({ onSend, disabled, currentSubject, onSubjectCh
           placeholder={disabled ? 'AI is thinking...' : 'Start typing...'}
           disabled={disabled}
           rows={1}
-          className="flex-1 bg-transparent resize-none text-sm outline-none py-3 leading-relaxed"
+          className="flex-1 bg-transparent resize-none text-sm outline-none py-3 pl-4 leading-relaxed"
           style={{
             color: 'var(--text-1)',
             minHeight: 44,
