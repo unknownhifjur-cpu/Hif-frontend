@@ -140,7 +140,7 @@ function UserBubble({ message }) {
         </motion.span>
       </div>
       <div
-        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-auto"
+        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-1"
         style={{
           background: 'linear-gradient(135deg, #2d4fd4, #1e3fa8)',
           boxShadow: '0 2px 8px rgba(45,79,212,0.4)',

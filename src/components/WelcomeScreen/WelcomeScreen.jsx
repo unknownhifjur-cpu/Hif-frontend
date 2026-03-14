@@ -1,6 +1,57 @@
-import { motion } from 'framer-motion';
-import { Zap, Globe, Lock, Infinity, ArrowRight, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { Zap, Globe, Lock, Infinity as InfinityIcon, ArrowRight, Sparkles } from 'lucide-react';
 import { SUBJECTS } from '../../utils/subjects';
+
+/* ─── Rotating subtitle lines ───────────────────────────────────────── */
+const TAGLINES = [
+  { text: 'আপনার বন্ধু, আপনার শিক্ষক।',                accent: false },
+  { text: 'Your personal AI tutor.',                  accent: false },
+  { text: 'Your Learning Sidekick 🚀',                accent: true  },
+  { text: 'Ask anything. Learn everything.',         accent: true  },
+  { text: 'বাংলা ও English — দুটোতেই।',             accent: false },
+  { text: 'Free forever. No login needed.',          accent: false },
+  { text: 'Instant answers, day or night. 🌙☀️',    accent: true  },
+  { text: 'Study smarter, not harder.',              accent: true  },
+  { text: 'Learn. Explore. Repeat. 🔄',              accent: true  },
+  { text: 'Knowledge at your fingertips. 💡',        accent: true  },
+];
+
+function RotatingTagline() {
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setIdx(i => (i + 1) % TAGLINES.length);
+    }, 2800);
+    return () => clearInterval(id);
+  }, []);
+
+  const line = TAGLINES[idx];
+
+  return (
+    <div style={{ height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={idx}
+          initial={{ opacity: 0, y: 14, filter: 'blur(4px)' }}
+          animate={{ opacity: 1, y: 0,  filter: 'blur(0px)' }}
+          exit={{    opacity: 0, y: -14, filter: 'blur(4px)' }}
+          transition={{ duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
+          className="text-sm md:text-base text-center"
+          style={{
+            color: line.accent ? 'var(--accent-light)' : 'var(--text-2)',
+            fontWeight: line.accent ? 500 : 400,
+            fontFamily: 'var(--font-ui)',
+            margin: 0,
+          }}
+        >
+          {line.text}
+        </motion.p>
+      </AnimatePresence>
+    </div>
+  );
+}
 
 const quickQuestions = [
   { text: 'Explain quadratic equations step by step', subject: 'Math' },
@@ -13,7 +64,7 @@ const features = [
   { icon: Zap,      label: 'Instant',   desc: 'Fast responses',   color: '#fbbf24', bg: 'rgba(251,191,36,0.08)'  },
   { icon: Globe,    label: 'Bilingual', desc: 'বাংলা & English',  color: '#4ade80', bg: 'rgba(74,222,128,0.08)'  },
   { icon: Lock,     label: 'Private',   desc: 'No login needed',  color: '#4d7cff', bg: 'rgba(77,124,255,0.08)'  },
-  { icon: Infinity, label: 'Free',      desc: 'Always free',      color: '#9f7aea', bg: 'rgba(159,122,234,0.08)' },
+  { icon: InfinityIcon, label: 'Free',      desc: 'Always free',      color: '#9f7aea', bg: 'rgba(159,122,234,0.08)' },
 ];
 
 const container = {
@@ -67,15 +118,14 @@ export default function WelcomeScreen({ onStartChat, onSubjectSelect }) {
           </motion.div>
 
           <h1
-            className="text-4xl md:text-5xl font-bold mb-2 tracking-tight"
+            className="text-4xl md:text-5xl font-bold mb-3 tracking-tight"
             style={{ fontFamily: 'var(--font-head)' }}
           >
             <span className="gradient-text">Hif AI</span>
           </h1>
-          <p className="text-sm" style={{ color: 'var(--text-2)' }}>
-            আপনার বন্ধু, আপনার শিক্ষক —{' '}
-            <span style={{ color: 'var(--text-1)' }}>Your personal AI tutor</span>
-          </p>
+
+          {/* Animated rotating taglines */}
+          <RotatingTagline />
         </motion.div>
 
         {/* Feature cards */}
