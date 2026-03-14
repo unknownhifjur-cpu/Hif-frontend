@@ -1,76 +1,63 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { motion } from 'framer-motion';
+import { Search, Menu } from 'lucide-react';
 import Sidebar from './components/Sidebar/Sidebar';
 import ChatWindow from './components/ChatWindow/ChatWindow';
 import InputBar from './components/InputBar/InputBar';
 import WelcomeScreen from './components/WelcomeScreen/WelcomeScreen';
 import { askQuestion, getChatHistory, getChatById, deleteChat } from './utils/api';
 
-/**
- * Get or create a persistent session ID stored in localStorage
- * This identifies the user without requiring login
- */
 function getSessionId() {
   let id = localStorage.getItem('hif-ai-session');
-  if (!id) {
-    id = uuidv4();
-    localStorage.setItem('hif-ai-session', id);
-  }
+  if (!id) { id = uuidv4(); localStorage.setItem('hif-ai-session', id); }
   return id;
 }
 
 export default function App() {
   const sessionId = useRef(getSessionId()).current;
 
-  const [chats, setChats] = useState([]);
-  const [activeChatId, setActiveChatId] = useState(null);
-  const [activeChat, setActiveChat] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [subject, setSubject] = useState('General');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [chats,            setChats]            = useState([]);
+  const [activeChatId,     setActiveChatId]     = useState(null);
+  const [activeChat,       setActiveChat]       = useState(null);
+  const [isLoading,        setIsLoading]        = useState(false);
+  const [error,            setError]            = useState(null);
+  const [subject,          setSubject]          = useState('General');
+  const [sidebarOpen,      setSidebarOpen]      = useState(false);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
+  const [searchQuery,      setSearchQuery]      = useState('');
+  const [searchFocus,      setSearchFocus]      = useState(false);
 
-  // ─── Load chat history on mount ────────────────────────────────────────────
+  // ── Load history ────────────────────────────────────────────────────
   useEffect(() => {
     loadHistory();
-
-    // Poll for history updates every 30 seconds
-    const interval = setInterval(loadHistory, 30000);
-    return () => clearInterval(interval);
+    const iv = setInterval(loadHistory, 30000);
+    return () => clearInterval(iv);
   }, []);
 
   const loadHistory = useCallback(async () => {
     try {
       const data = await getChatHistory(sessionId);
       setChats(data.chats || []);
-    } catch (err) {
-      console.error('Failed to load history:', err);
-    } finally {
+    } catch { /* silent */ } finally {
       setIsHistoryLoading(false);
     }
   }, [sessionId]);
 
-  // ─── Load a specific chat when selected ────────────────────────────────────
+  // ── Select chat ──────────────────────────────────────────────────────
   const selectChat = useCallback(async (chatId) => {
     setActiveChatId(chatId);
     setError(null);
-
-    // Optimistically show the chat from our list first
-    const localChat = chats.find(c => c._id === chatId);
-    if (localChat) setActiveChat({ ...localChat, messages: [] });
-
+    const local = chats.find(c => c._id === chatId);
+    if (local) setActiveChat({ ...local, messages: [] });
     try {
       const data = await getChatById(chatId, sessionId);
       setActiveChat(data.chat);
-      // Update subject to match the chat
       if (data.chat.subject) setSubject(data.chat.subject);
-    } catch (err) {
-      setError('Failed to load chat messages.');
-    }
+    } catch { setError('Failed to load chat.'); }
   }, [chats, sessionId]);
 
-  // ─── Start a new chat session ───────────────────────────────────────────────
+  // ── New chat ─────────────────────────────────────────────────────────
   const startNewChat = useCallback(() => {
     setActiveChatId(null);
     setActiveChat(null);
@@ -78,87 +65,66 @@ export default function App() {
     setSidebarOpen(false);
   }, []);
 
-  // ─── Send a message ─────────────────────────────────────────────────────────
+  // ── Send message ─────────────────────────────────────────────────────
   const handleSend = useCallback(async (question, overrideSubject) => {
     const sub = overrideSubject || subject;
     setIsLoading(true);
     setError(null);
 
-    // Optimistically add user message to UI
-    const tempUserMsg = {
-      _id: 'temp-user-' + Date.now(),
+    const tempMsg = {
+      _id: 'temp-' + Date.now(),
       role: 'user',
       content: question,
       subject: sub,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
-
     setActiveChat(prev => ({
       ...(prev || { _id: null, messages: [], subject: sub }),
-      messages: [...(prev?.messages || []), tempUserMsg]
+      messages: [...(prev?.messages || []), tempMsg],
     }));
 
     try {
-      const data = await askQuestion({
-        sessionId,
-        chatId: activeChatId,
-        question,
-        subject: sub
-      });
-
-      // Update active chat ID if this was a new chat
-      if (!activeChatId) {
-        setActiveChatId(data.chatId);
-      }
-
-      // Replace temp message with real messages from server
+      const data = await askQuestion({ sessionId, chatId: activeChatId, question, subject: sub });
+      if (!activeChatId) setActiveChatId(data.chatId);
       setActiveChat(prev => {
-        const messages = (prev?.messages || []).filter(m => !m._id?.startsWith('temp-'));
-        return {
-          ...prev,
-          _id: data.chatId,
-          title: data.title,
-          messages: [...messages, data.userMessage, data.assistantMessage]
-        };
+        const msgs = (prev?.messages || []).filter(m => !m._id?.startsWith('temp-'));
+        return { ...prev, _id: data.chatId, title: data.title, messages: [...msgs, data.userMessage, data.assistantMessage] };
       });
-
-      // Refresh sidebar history
       await loadHistory();
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
-      // Remove temp message on error
       setActiveChat(prev => ({
         ...prev,
-        messages: (prev?.messages || []).filter(m => !m._id?.startsWith('temp-'))
+        messages: (prev?.messages || []).filter(m => !m._id?.startsWith('temp-')),
       }));
     } finally {
       setIsLoading(false);
     }
   }, [activeChatId, sessionId, subject, loadHistory]);
 
-  // ─── Handle welcome screen quick start ────────────────────────────────────
   const handleWelcomeStart = useCallback((question, questionSubject) => {
     setSubject(questionSubject);
     handleSend(question, questionSubject);
   }, [handleSend]);
 
-  // ─── Delete a chat ──────────────────────────────────────────────────────────
+  const handleRegenerate = useCallback(async () => {
+    if (!activeChat?.messages?.length) return;
+    const lastUser = [...(activeChat.messages || [])].reverse().find(m => m.role === 'user');
+    if (lastUser) await handleSend(lastUser.content);
+  }, [activeChat, handleSend]);
+
   const handleDeleteChat = useCallback(async (chatId) => {
     try {
       await deleteChat(chatId, sessionId);
       setChats(prev => prev.filter(c => c._id !== chatId));
-
-      if (activeChatId === chatId) {
-        setActiveChatId(null);
-        setActiveChat(null);
-      }
-    } catch (err) {
-      console.error('Failed to delete chat:', err);
-    }
+      if (activeChatId === chatId) { setActiveChatId(null); setActiveChat(null); }
+    } catch { /* silent */ }
   }, [activeChatId, sessionId]);
 
+  const hasChat = !!(activeChatId || activeChat);
+
   return (
-    <div className="h-screen flex bg-surface-900 overflow-hidden">
+    <div className="h-screen flex overflow-hidden" style={{ background: 'var(--bg-1)' }}>
       {/* Sidebar */}
       <Sidebar
         chats={chats}
@@ -170,51 +136,96 @@ export default function App() {
         onClose={() => setSidebarOpen(false)}
       />
 
-      {/* Main content area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
-        <header className="flex items-center gap-3 px-4 py-3 border-b border-surface-600 bg-surface-800/80 backdrop-blur-sm flex-shrink-0">
-          {/* Hamburger for mobile */}
+      {/* Main */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        {/* ── Top Header ── */}
+        <header
+          className="flex items-center gap-3 px-4 flex-shrink-0"
+          style={{
+            height: 52,
+            background: 'var(--bg-2)',
+            borderBottom: '1px solid var(--border-0)',
+          }}
+        >
+          {/* Hamburger (mobile) */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="md:hidden text-slate-400 hover:text-white p-1 rounded-lg hover:bg-surface-700 transition-colors"
+            className="md:hidden icon-btn"
+            style={{ flexShrink: 0 }}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
+            <Menu size={17} />
           </button>
 
-          {/* Chat title or logo */}
+          {/* Title */}
           <div className="flex-1 min-w-0">
-            {activeChat ? (
+            {hasChat ? (
               <div>
-                <h1 className="text-sm font-semibold text-slate-200 truncate">{activeChat.title || 'New Chat'}</h1>
-                <p className="text-[10px] text-slate-500">Hif AI • Student Tutor</p>
+                <h1
+                  className="text-sm font-semibold truncate"
+                  style={{ fontFamily: 'var(--font-head)', color: 'var(--text-0)' }}
+                >
+                  {activeChat?.title || 'New Chat'}
+                </h1>
+                <p className="text-[10px]" style={{ color: 'var(--text-3)' }}>
+                  Hif AI · Student Tutor
+                </p>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                {/* Custom logo image */}
-                <img src="/favi-bg.png" alt="Hif AI" className="h-6 w-auto" />
-                <span className="text-xs text-slate-500 hidden sm:inline">— Your AI Tutor</span>
+                <h1
+                  className="text-sm font-bold"
+                  style={{ fontFamily: 'var(--font-head)', color: 'var(--text-0)' }}
+                >
+                  AI Chat Helper
+                </h1>
               </div>
             )}
           </div>
 
-          {/* Status indicator */}
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"/>
-            <span className="text-[10px] text-slate-500 hidden sm:inline">Online</span>
+          {/* Search bar */}
+          <motion.div
+            animate={{ width: searchFocus ? 200 : 150 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all"
+            style={{
+              background: 'var(--bg-4)',
+              border: `1px solid ${searchFocus ? 'var(--border-accent)' : 'var(--border-1)'}`,
+            }}
+          >
+            <Search size={12} style={{ color: 'var(--text-3)', flexShrink: 0 }} />
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onFocus={() => setSearchFocus(true)}
+              onBlur={() => setSearchFocus(false)}
+              placeholder="Search..."
+              className="bg-transparent text-xs outline-none w-full"
+              style={{ color: 'var(--text-1)', fontFamily: 'var(--font-ui)' }}
+            />
+          </motion.div>
+
+          {/* Status dot */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <div
+              className="w-1.5 h-1.5 rounded-full pulse-ring"
+              style={{ background: 'var(--green)' }}
+            />
+            <span className="text-[10px] hidden sm:inline" style={{ color: 'var(--text-3)' }}>
+              Online
+            </span>
           </div>
         </header>
 
-        {/* Chat area */}
-        <div className="flex-1 flex flex-col min-h-0">
-          {activeChatId || activeChat ? (
+        {/* ── Content area ── */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {hasChat ? (
             <>
               <ChatWindow
                 chat={activeChat}
                 isLoading={isLoading}
                 error={error}
+                onRegenerate={handleRegenerate}
               />
               <InputBar
                 onSend={handleSend}
