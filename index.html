@@ -1,15 +1,39 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favi-bg.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Hif AI – Your intelligent tutor for Math, Science, Programming & more." />
-    <title>Hif AI — AI Tutor</title>
-    <!-- Google Fonts: Inter (English) & Noto Sans Bengali -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- ── Primary Meta ── -->
+    <title>Hif AI — Student Tutor</title>
+    <meta name="description" content="Your personal AI tutor — ask anything, learn everything. Free, bilingual, no login needed." />
+    <meta name="theme-color" content="#4d7cff" />
+
+    <!-- ── PWA ── -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Hif AI" />
+
+    <!-- ── Icons ── -->
+    <link rel="icon" type="image/png" href="/favi-bg.png" />
+    <link rel="apple-touch-icon" href="/favi-bg.png" />
+
+    <!-- ── Open Graph ── -->
+    <meta property="og:title" content="Hif AI — Student Tutor" />
+    <meta property="og:description" content="Your personal AI tutor. Free forever, bilingual, no login needed." />
+    <meta property="og:image" content="/favi-bg.png" />
+    <meta property="og:type" content="website" />
+
+    <!-- ── SW Registration ── -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

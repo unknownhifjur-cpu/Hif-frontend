@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Trash2, Plus, X, Search,
-  MessageSquare, HelpCircle, Moon, Sun, CalendarCheck, Timer, Gamepad2, PenLine, StickyNote,
+  MessageSquare, HelpCircle, Moon, Sun, CalendarCheck, Timer, Gamepad2, PenLine, StickyNote, Download,
 } from 'lucide-react';
 import { groupChatsByDate, getSubject, formatRelativeTime } from '../../utils/subjects';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 
 /* ─── Icon Rail Item ──────────────────────────────────────────────── */
 function NavIcon({ icon: Icon, label, active, onClick }) {
@@ -33,6 +34,7 @@ export default function Sidebar({
   const [search,     setSearch]     = useState('');
   const [deletingId, setDeletingId] = useState(null);
   const [isMobile,   setIsMobile]   = useState(false);
+  const { canInstall, install, isInstalled } = usePWAInstall();
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -88,6 +90,30 @@ export default function Sidebar({
         <NavIcon icon={PenLine}       label="Whiteboard"     onClick={onWhiteboardOpen} />
 
         <div className="flex-1" />
+
+        {/* Install PWA button — only shown when installable */}
+        <AnimatePresence>
+          {canInstall && !isInstalled && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              onClick={install}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.88 }}
+              title="Install Hif AI app"
+              className="icon-btn"
+              style={{
+                background: 'linear-gradient(135deg, rgba(77,124,255,0.2), rgba(0,212,232,0.15))',
+                color: 'var(--accent-light)',
+                border: '1px solid var(--border-accent)',
+                animation: 'pulse-ring 2s ease infinite',
+              }}
+            >
+              <Download size={16} />
+            </motion.button>
+          )}
+        </AnimatePresence>
 
         {/* Theme toggle */}
         <motion.button
