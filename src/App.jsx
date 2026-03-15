@@ -12,6 +12,7 @@ import PomodoroTimer from './components/PomodoroTimer/PomodoroTimer';
 import GameHub from './components/GameHub/GameHub';
 import Whiteboard from './components/Whiteboard/Whiteboard';
 import QuickNotes from './components/QuickNotes/QuickNotes';
+import LandingPage from './components/LandingPage/LandingPage';
 import { askQuestion, getChatHistory, getChatById, deleteChat } from './utils/api';
 
 function getSessionId() {
@@ -22,6 +23,16 @@ function getSessionId() {
 
 export default function App() {
   const sessionId = useRef(getSessionId()).current;
+
+  // Show landing page to first-time visitors
+  const [showLanding, setShowLanding] = useState(
+    () => !localStorage.getItem('hifai-visited')
+  );
+
+  const handleEnterApp = () => {
+    localStorage.setItem('hifai-visited', '1');
+    setShowLanding(false);
+  };
 
   const [chats,            setChats]            = useState([]);
   const [activeChatId,     setActiveChatId]     = useState(null);
@@ -141,6 +152,24 @@ export default function App() {
 
   const hasChat = !!(activeChatId || activeChat);
 
+  // Show landing page to new visitors
+  if (showLanding) {
+    return (
+      <AnimatePresence mode="wait">
+        <motion.div
+          key="landing"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.4 }}
+          style={{ height: '100vh', overflowY: 'auto' }}
+        >
+          <LandingPage onEnter={handleEnterApp} />
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
   return (
     <div className="h-screen flex overflow-hidden" style={{ background: 'var(--bg-1)' }}>
       {/* Sidebar */}
@@ -233,7 +262,7 @@ export default function App() {
                   className="text-sm font-bold"
                   style={{ fontFamily: 'var(--font-head)', color: 'var(--text-0)' }}
                 >
-                  Helpful | Innovative | Friendly AI
+                  AI Chat Helper
                 </h1>
               </div>
             )}
