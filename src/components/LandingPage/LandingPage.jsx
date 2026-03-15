@@ -371,6 +371,41 @@ export default function LandingPage({ onEnter }) {
               </svg>
               Start Learning — It's Free
             </motion.button>
+
+            {/* Share button */}
+            <motion.button
+              whileHover={{ scale: 1.06, y: -2 }}
+              whileTap={{ scale: 0.94 }}
+              onClick={handleShare}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '15px 22px', borderRadius: 14, border: 'none',
+                cursor: 'pointer', fontSize: 15, fontWeight: 500,
+                fontFamily: "'DM Sans', sans-serif",
+                background: shared ? 'linear-gradient(135deg,#4ade80,#16a34a)' : 'linear-gradient(135deg, #f472b6, #db2777)',
+                color: shared ? '#0a1a0f' : 'white',
+                boxShadow: shared ? '0 4px 20px rgba(74,222,128,0.4)' : '0 4px 20px rgba(244,114,182,0.4)',
+                transition: 'background 0.3s, box-shadow 0.3s',
+              }}
+            >
+              {shared ? (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Link Copied!
+                </>
+              ) : (
+                <>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                  </svg>
+                  Share App
+                </>
+              )}
+            </motion.button>
           </motion.div>
 
           {/* Feature chips */}
