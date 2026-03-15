@@ -98,6 +98,27 @@ const TESTIMONIALS = [
 export default function LandingPage({ onEnter }) {
   useReveal();
   const { canInstall, install, isInstalled } = usePWAInstall();
+  const [installing, setInstalling] = useState(false);
+  const [progress,   setProgress]   = useState(0);
+
+  const handleInstall = async () => {
+    setInstalling(true);
+    setProgress(0);
+
+    // Animate progress to 60% while waiting for user to confirm dialog
+    const ramp = setInterval(() => {
+      setProgress(p => p < 60 ? p + 4 : p);
+    }, 80);
+
+    await install();
+
+    clearInterval(ramp);
+
+    // Rush to 100% after confirmation
+    setProgress(80);
+    setTimeout(() => setProgress(100), 200);
+    setTimeout(() => { setInstalling(false); setProgress(0); }, 1400);
+  };
   const typeText    = useTypewriter();
   const [shared,      setShared]      = useState(false);
   const [faqOpen,     setFaqOpen]     = useState(null);
@@ -196,10 +217,11 @@ export default function LandingPage({ onEnter }) {
           position:fixed; inset:0; z-index:0; pointer-events:none;
           background-image: linear-gradient(rgba(77,124,255,0.04) 1px,transparent 1px), linear-gradient(90deg,rgba(77,124,255,0.04) 1px,transparent 1px);
           background-size:48px 48px; animation:lp-grid 20s linear infinite;
+          will-change: background-position;
         }
         @keyframes lp-grid { to { background-position:48px 48px; } }
 
-        .lp-orb { position:fixed; border-radius:50%; pointer-events:none; z-index:0; filter:blur(80px); opacity:0.14; }
+        .lp-orb { position:fixed; border-radius:50%; pointer-events:none; z-index:0; filter:blur(80px); opacity:0.14; will-change: transform; }
 
         .lp-cta-btn {
           display:inline-flex; align-items:center; gap:10px;
@@ -258,13 +280,19 @@ export default function LandingPage({ onEnter }) {
         ::-webkit-scrollbar-thumb { background:#4a5475; border-radius:4px; }
       `}</style>
 
-      {/* Bg effects — dark only */}
-      {isDark && <div className="lp-grid-bg" />}
-      {isDark && <div className="lp-orb" style={{ width:600, height:600, background:'#4d7cff', top:-200, left:-100 }} />}
-      {isDark && <div className="lp-orb" style={{ width:500, height:500, background:'#9f7aea', bottom:-100, right:-100 }} />}
-      {isDark && <div className="lp-orb" style={{ width:300, height:300, background:'#00d4e8', top:'40%', right:'20%' }} />}
+    {/* Bg effects — dark only, outside overflow container */}
+    {isDark && <div className="lp-grid-bg" />}
+    {isDark && <div className="lp-orb" style={{ width:600, height:600, background:'#4d7cff', top:-200, left:-100 }} />}
+    {isDark && <div className="lp-orb" style={{ width:500, height:500, background:'#9f7aea', bottom:-100, right:-100 }} />}
+    {isDark && <div className="lp-orb" style={{ width:300, height:300, background:'#00d4e8', top:'40%', right:'20%' }} />}
 
-      <div style={{ position:'relative', zIndex:1 }}>
+    <div style={{
+      minHeight: '100vh',
+      background: bg,
+      fontFamily: "'DM Sans', sans-serif",
+      color: text1,
+      transition: 'background 0.3s, color 0.3s',
+    }}>
 
         {/* ── HERO ── */}
         <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '80px 24px' }}>
@@ -786,37 +814,92 @@ def photosynthesis(co2, h2o, light):
         </footer>
       </div>
 
-      {/* ── Fixed floating Install button ── */}
+      {/* ── Fixed floating Install button + progress bar ── */}
       <AnimatePresence>
         {canInstall && !isInstalled && (
-          <motion.button
+          <motion.div
             initial={{ opacity: 0, scale: 0.6, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.6, y: 20 }}
             transition={{ type: 'spring', stiffness: 340, damping: 22, delay: 1.2 }}
-            whileHover={{ scale: 1.07, y: -3 }}
-            whileTap={{ scale: 0.93 }}
-            onClick={install}
             style={{
               position: 'fixed', bottom: 28, right: 28, zIndex: 100,
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '14px 22px', borderRadius: 16, border: 'none',
-              cursor: 'pointer', fontSize: 14, fontWeight: 600,
-              fontFamily: "'DM Sans', sans-serif",
-              background: 'linear-gradient(135deg, #4ade80, #16a34a)',
-              color: '#0a1a0f',
+              display: 'flex', flexDirection: 'column', gap: 0,
+              borderRadius: 16, overflow: 'hidden',
               boxShadow: '0 4px 28px rgba(74,222,128,0.45), 0 0 0 1px rgba(74,222,128,0.2)',
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Install App
-          </motion.button>
+            <motion.button
+              whileHover={!installing ? { scale: 1.03 } : {}}
+              whileTap={!installing ? { scale: 0.96 } : {}}
+              onClick={handleInstall}
+              disabled={installing}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                padding: '13px 22px', border: 'none',
+                cursor: installing ? 'default' : 'pointer',
+                fontSize: 14, fontWeight: 600,
+                fontFamily: "'DM Sans', sans-serif",
+                background: 'linear-gradient(135deg, #4ade80, #16a34a)',
+                color: '#0a1a0f',
+              }}
+            >
+              <AnimatePresence mode="wait">
+                {installing ? (
+                  <motion.span key="spin"
+                    initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                    style={{ display: 'flex' }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                      style={{ animation: 'lp-spin 1s linear infinite' }}>
+                      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                    </svg>
+                  </motion.span>
+                ) : (
+                  <motion.span key="dl"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    style={{ display: 'flex' }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7 10 12 15 17 10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                  </motion.span>
+                )}
+              </AnimatePresence>
+              {installing ? 'Installing…' : 'Install App'}
+            </motion.button>
+
+            {/* Progress bar — only visible while installing */}
+            <AnimatePresence>
+              {installing && (
+                <motion.div
+                  initial={{ height: 0 }}
+                  animate={{ height: 5 }}
+                  exit={{ height: 0 }}
+                  style={{ background: '#0a1a0f', overflow: 'hidden' }}
+                >
+                  <motion.div
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                    style={{
+                      height: '100%',
+                      background: progress === 100
+                        ? '#4d7cff'
+                        : 'linear-gradient(90deg, #16a34a, #86efac)',
+                      borderRadius: 2,
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Spin keyframe for install loader */}
+      <style>{`@keyframes lp-spin { to { transform: rotate(360deg); } }`}</style>
     </div>
     </>
   );

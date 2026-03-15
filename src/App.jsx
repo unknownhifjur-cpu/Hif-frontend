@@ -50,6 +50,25 @@ export default function App() {
   const [isDark,           setIsDark]           = useState(true);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
 
+  // Allow body to scroll on landing page, lock it in the app
+  useEffect(() => {
+    if (showLanding) {
+      document.documentElement.style.overflow = 'auto';
+      document.body.style.overflow = 'auto';
+      document.getElementById('root').style.overflow = 'auto';
+      document.getElementById('root').style.height = 'auto';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.getElementById('root').style.overflow = '';
+      document.getElementById('root').style.height = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [showLanding]);
+
   // Apply light/dark class to <body>
   useEffect(() => {
     document.body.classList.toggle('light', !isDark);
@@ -160,9 +179,8 @@ export default function App() {
           key="landing"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.4 }}
-          style={{ height: '100vh', overflowY: 'auto' }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
         >
           <LandingPage onEnter={handleEnterApp} />
         </motion.div>

@@ -1,14 +1,12 @@
 /* ─── Hif AI Service Worker ────────────────────────────────────────── */
 const CACHE_NAME = 'hifai-v1';
 
-// Assets to pre-cache on install
 const PRECACHE = [
   '/',
   '/index.html',
   '/favi-bg.png',
 ];
 
-/* Install — pre-cache shell */
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE))
@@ -16,50 +14,47 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-/* Activate — clean old caches */
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
-        keys
-          .filter((k) => k !== CACHE_NAME)
-          .map((k) => caches.delete(k))
+        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
       )
     )
   );
   self.clients.claim();
 });
 
-/* Fetch — network-first for API, cache-first for assets */
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const url = new URL(event.request.url);
 
-  // Always go network for API calls
-  if (
-    url.hostname.includes('onrender.com') ||
-    url.hostname.includes('anthropic.com') ||
-    request.method !== 'GET'
-  ) {
-    return;
-  }
+  // ── Never intercept these ──────────────────────────────────────────
+  // 1. localhost in any form (Vite HMR, dev server, backend)
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') return;
 
-  // Cache-first for same-origin static assets
+  // 2. Non-GET requests
+  if (event.request.method !== 'GET') return;
+
+  // 3. API calls to backend
+  if (url.pathname.startsWith('/api/')) return;
+
+  // 4. Anthropic API
+  if (url.hostname.includes('anthropic.com')) return;
+
+  // 5. Vite internal paths
+  if (url.pathname.startsWith('/@') || url.pathname.includes('__vite')) return;
+
+  // ── Cache-first for same-origin static assets ──────────────────────
   event.respondWith(
-    caches.match(request).then((cached) => {
+    caches.match(event.request).then((cached) => {
       if (cached) return cached;
-      return fetch(request).then((response) => {
-        // Only cache successful same-origin responses
-        if (
-          response.ok &&
-          response.type === 'basic' &&
-          !url.pathname.startsWith('/api/')
-        ) {
+      return fetch(event.request).then((response) => {
+        if (response.ok && response.type === 'basic') {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return response;
-      });
+      }).catch(() => cached);
     })
   );
 });

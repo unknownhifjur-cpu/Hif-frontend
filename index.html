@@ -26,12 +26,23 @@
     <meta property="og:image" content="/favi-bg.png" />
     <meta property="og:type" content="website" />
 
-    <!-- ── SW Registration ── -->
     <script>
+      // Force-unregister any stale service workers on every load in dev
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
-        });
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+          navigator.serviceWorker.getRegistrations().then(regs => {
+            regs.forEach(reg => reg.unregister());
+          });
+          // Clear all SW caches in dev
+          if ('caches' in window) {
+            caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+          }
+        } else {
+          // Production only
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+          });
+        }
       }
     </script>
   </head>
